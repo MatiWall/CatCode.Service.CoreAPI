@@ -1,0 +1,8 @@
+coreApi:
+  url: http://127.0.0.1:8000/
+
+plugins:
+  catdocs:
+    url: http://127.0.0.1:8002
+  dependencies:
+    url: http://127.0.0.1:8001/

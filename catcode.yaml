@@ -1,0 +1,20 @@
+kind: Component
+metadata:
+  description: Core backend for catcode. Holds cache of catalog entities and monitor
+    git repos and emit event on changes.
+  system: catcode
+  application: backend
+  deployableUnit: coreapi
+  version: 0.1.8
+  tags:
+  - python
+  - core_api
+  - backend
+  links:
+  - title: Telemetry
+    icon: grafana
+    url: http://grafana.mw.local/d/ddp9zh235c740b/overview?orgId=1&refresh=30s&var-service=catcode.backend.core-api&var-log_level=All&from=now-30m&to=now
+spec:
+  type: service
+  lifecycle: Development
+  owner: mw

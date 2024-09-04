@@ -1,0 +1,3 @@
+username: MatiWall
+rabbitmq_url: 'amqp://guest:guest@rabbitmq.mw.local/'
+logging_level: 10
