@@ -10,7 +10,7 @@ def run_etcd_command(command: list[str]):
         result = subprocess.run(command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     except subprocess.CalledProcessError as e:
         raise HTTPException(status_code=500, detail=f'etcd error: {e.stderr.strip()}')
-    return result
+    return result.stdout
 
 @router.get('/{key}')
 def get_resource(key):
