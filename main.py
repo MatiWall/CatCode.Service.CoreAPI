@@ -17,10 +17,10 @@ import uvicorn
 
 from core_api.api.appplications import router as application_router
 from core_api.api.statistics import router as stat_router
+from core_api.api.etcd import router as etcd_router
 
 app = FastAPI(
     root_path='/api/core-api/v1',
-
 )
 
 
@@ -42,14 +42,15 @@ app.add_middleware(
 )
 
 
-@app.on_event("startup")
-async def startup_event():
-    await on_start_up()
-    scheduler.start()
+# @app.on_event("startup")
+# async def startup_event():
+#     await on_start_up()
+#     scheduler.start()
 
 
-app.include_router(application_router)
-app.include_router(stat_router)
+#app.include_router(application_router)
+#app.include_router(stat_router)
+app.include_router(etcd_router)
 if __name__ == '__main__':
     logging.getLogger("pika").setLevel(logging.ERROR)
     logging.getLogger("aiormq").setLevel(logging.ERROR)
