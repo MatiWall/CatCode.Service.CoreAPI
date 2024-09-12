@@ -1,5 +1,6 @@
 import subprocess
-from fastapi import APIRouter
+
+from fastapi import APIRouter, Query
 from fastapi.exceptions import HTTPException
 from settings import config
 
@@ -12,24 +13,38 @@ def run_etcd_command(command: list[str]):
         raise HTTPException(status_code=500, detail=f'etcd error: {e.stderr.strip()}')
     return result.stdout
 
-@router.get('/{key}')
-def get_resource(key):
-    command = ['etcdctl', f'--endpoints={config.etcd_host}', 'get', key]
+@router.get('/{path:path}')
+def get_resource(path: str, prefix: bool = Query(default=False)):
+    if prefix:
+        command = ['etcdctl', f'--endpoints={config.etcd_host}', 'get', path, '--prefix']
+    else:
+        command = ['etcdctl', f'--endpoints={config.etcd_host}', 'get', path, '--print-value-only']
     output = run_etcd_command(command)
     if output:
-        return {"key": key, "value": output.strip()}
+        if prefix:
+            keys = output.strip().split('\n')
+            return {"prefix": path, "keys": keys}
+        return {"key": path, "value": output.strip()}
     else:
         raise HTTPException(status_code=404, detail="Resource not found")
 
-@router.post("/{key}")
-def post_resource(key: str, value: str):
-    command = ['etcdctl', f'--endpoints={config.etcd_host}', 'put', key, value]
+@router.post("/{path:path}")
+def post_resource(path: str, value: str):
+    command = ['etcdctl', f'--endpoints={config.etcd_host}', 'put', path, value]
     run_etcd_command(command)
-    return {"key": key, "value": value}
+    return {"key": path, "value": value}
 
-@router.get("/{prefix}")
-def get_resources(prefix: str):
-    command = ['etcdctl', f'--endpoints={config.etcd_host}', 'get', prefix, '--prefix']
-    output = run_etcd_command(command)
-    keys = output.strip().split('\n')
-    return {"prefix": prefix, "keys": keys}
+
+@router.delete('/{path:path}')
+def delete_resource(path: str):
+    command = ['etcdctl', f'--endpoints={config.etcd_host}', 'del', path]
+    try:
+        output = run_etcd_command(command)
+        if "deleted" in output.lower():
+            return {"key": path, "status": "deleted"}
+        else:
+            raise HTTPException(status_code=404, detail="Resource not found")
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error deleting resource: {str(e)}")
