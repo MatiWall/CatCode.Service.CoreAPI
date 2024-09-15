@@ -1,24 +1,14 @@
-import subprocess
 import json
 
 from fastapi import APIRouter, Query
 from fastapi.exceptions import HTTPException
-from pydantic import BaseModel
 
+from core_api.etcd.command import run_command
+from core_api.resource.validation import resource_validation
 from settings import config
 
 router = APIRouter(prefix='/resource')
 
-def run_etcd_command(command: list[str]):
-    try:
-        result = subprocess.run(command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-    except subprocess.CalledProcessError as e:
-        # Handle etcd connection error
-        if "connection" in e.stderr.lower():
-            raise HTTPException(status_code=503, detail=f"ETCD cluster connection error: {e.stderr.strip()}")
-        else:
-            raise HTTPException(status_code=500, detail=f"ETCD error: {e.stderr.strip()}")
-    return result.stdout
 
 @router.get('/{path:path}')
 def get_resource(path: str, prefix: bool = Query(default=False)):
@@ -28,7 +18,7 @@ def get_resource(path: str, prefix: bool = Query(default=False)):
         command = ['etcdctl', f'--endpoints={config.etcd_host}', 'get', path, '--print-value-only']
 
     try:
-        output = run_etcd_command(command)
+        output = run_command(command)
 
         if prefix:
             if output:
@@ -47,8 +37,11 @@ def get_resource(path: str, prefix: bool = Query(default=False)):
 
 @router.post("/{path:path}")
 def post_resource(path: str, resource: dict):
+
+    resource = resource_validation(resource)
+
     command = ['etcdctl', f'--endpoints={config.etcd_host}', 'put', path, json.dumps(resource)]
-    run_etcd_command(command)
+    run_command(command)
     return {"key": path, "value": resource}
 
 
@@ -56,7 +49,7 @@ def post_resource(path: str, resource: dict):
 def delete_resource(path: str):
     command = ['etcdctl', f'--endpoints={config.etcd_host}', 'del', path]
     try:
-        output = run_etcd_command(command)
+        output = run_command(command)
         if "deleted" in output.lower():
             return {"key": path, "status": "deleted"}
         else:
