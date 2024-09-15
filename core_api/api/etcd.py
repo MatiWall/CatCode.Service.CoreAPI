@@ -1,5 +1,5 @@
 import subprocess
-from csv import excel
+import json
 
 from fastapi import APIRouter, Query
 from fastapi.exceptions import HTTPException
@@ -44,14 +44,12 @@ def get_resource(path: str, prefix: bool = Query(default=False)):
     except HTTPException as e:
         raise e
 
-class Resource(BaseModel):
-    value: str
 
 @router.post("/{path:path}")
-def post_resource(path: str, resource: Resource):
-    command = ['etcdctl', f'--endpoints={config.etcd_host}', 'put', path, resource.value]
+def post_resource(path: str, resource: dict):
+    command = ['etcdctl', f'--endpoints={config.etcd_host}', 'put', path, json.dumps(resource)]
     run_etcd_command(command)
-    return {"key": path, "value": resource.value}
+    return {"key": path, "value": resource}
 
 
 @router.delete('/{path:path}')
