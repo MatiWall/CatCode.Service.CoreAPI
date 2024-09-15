@@ -5,7 +5,7 @@ metadata:
   system: catcode
   application: backend
   deployableUnit: coreapi
-  version: 0.1.12
+  version: 0.1.13
   tags:
   - python
   - core_api
