@@ -1,4 +1,5 @@
 import subprocess
+from csv import excel
 
 from fastapi import APIRouter, Query
 from fastapi.exceptions import HTTPException
@@ -10,7 +11,11 @@ def run_etcd_command(command: list[str]):
     try:
         result = subprocess.run(command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     except subprocess.CalledProcessError as e:
-        raise HTTPException(status_code=500, detail=f'etcd error: {e.stderr.strip()}')
+        # Handle etcd connection error
+        if "connection" in e.stderr.lower():
+            raise HTTPException(status_code=503, detail=f"ETCD cluster connection error: {e.stderr.strip()}")
+        else:
+            raise HTTPException(status_code=500, detail=f"ETCD error: {e.stderr.strip()}")
     return result.stdout
 
 @router.get('/{path:path}')
@@ -19,14 +24,23 @@ def get_resource(path: str, prefix: bool = Query(default=False)):
         command = ['etcdctl', f'--endpoints={config.etcd_host}', 'get', path, '--prefix']
     else:
         command = ['etcdctl', f'--endpoints={config.etcd_host}', 'get', path, '--print-value-only']
-    output = run_etcd_command(command)
-    if output:
+
+    try:
+        output = run_etcd_command(command)
+
         if prefix:
-            keys = output.strip().split('\n')
-            return {"prefix": path, "keys": keys}
-        return {"key": path, "value": output.strip()}
-    else:
-        raise HTTPException(status_code=404, detail="Resource not found")
+            if output:
+                keys = output.strip().split('\n')
+                return {"prefix": path, "keys": keys, 'exists': True}
+            else:
+                return {"prefix": path, "keys": [], 'exists': False}
+
+        if output:
+            return {"key": path, "value": output.strip(), 'exists': True}
+        else:
+            return {"key": path, "value": '', 'exists': False}
+    except HTTPException as e:
+        raise e
 
 @router.post("/{path:path}")
 def post_resource(path: str, value: str):
