@@ -1,4 +1,5 @@
 import json
+from typing import Optional
 
 from fastapi import APIRouter, Query
 from fastapi.exceptions import HTTPException
@@ -54,8 +55,32 @@ def post_resource(resource: dict):
     return {"key": path, "value": resource}
 
 
-@router.get('/{path:path}')
-def get_resource(path: str, prefix: bool = Query(default=False)):
+@router.get('/{resource}/{name}')
+def get_resources(resource: str, name: Optional[str] = None):
+    """
+    Should be able to handle resource on the following formats
+
+    components: plural name
+    component: singular name
+    components.catcode.io: <plural>.<api-group>
+    component.catcode.io: <singluar>.<api-group>
+    components.catcode.io/v1alpha1: <plural>.<api-group>/<version>
+    component.catcode.io/v1alpha1: <singular>.<api-group>/<version>
+
+    note following is also valid
+    templates.templating.catcode.io/v1alpha1: <singular>.<api-group>/<version>
+    as the fire . seperated the name from the group.
+
+
+    If api group is not added it should "try" to look it up it self.
+    If version is not added it should use the newest.
+
+
+
+    """
+
+
+
     if prefix:
         command = ['etcdctl', f'--endpoints={config.etcd_host}', 'get', path, '--prefix']
     else:
