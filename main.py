@@ -1,5 +1,9 @@
 import asyncio
 import logging
+from contextlib import asynccontextmanager
+
+from core_api.etcd.cache import resource_definition_cache
+from core_api.etcd.retrieve import fetch_resource_definitions
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +22,17 @@ import uvicorn
 from core_api.api.appplications import router as application_router
 from core_api.api.statistics import router as stat_router
 from core_api.api.etcd import router as etcd_router
+
+@asynccontextmanager
+async def initialize_resource_definition_cache():
+    resource_definitions = fetch_resource_definitions(
+        f'registry/api.catcode.io/resourcedefinition'
+    )
+
+    for resource_definition in resource_definitions:
+        resource_definition_cache.add(resource_definition)
+
+    yield
 
 app = FastAPI(
     root_path='/api/core-api/v1',

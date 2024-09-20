@@ -1,4 +1,4 @@
 username: MatiWall
 rabbitmq_url: 'amqp://guest:guest@rabbitmq.mw.local/'
 logging_level: 10
-etcd_host: http://etcd.mw.local
+etcd_host: "http://localhost:2379"

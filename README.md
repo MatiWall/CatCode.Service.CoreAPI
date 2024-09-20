@@ -1,5 +1,9 @@
 
-* Work on repo reader and how to track changes
+* to interact with etcd you might have to run
+```bash
+export ETCDCTL_API=3 
+```
+first
 
 ## Events
 

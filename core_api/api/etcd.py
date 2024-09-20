@@ -1,12 +1,12 @@
 import json
 from typing import Optional
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter
 from fastapi.exceptions import HTTPException
 
 from core_api.etcd.command import run_command
-from core_api.resource.path import resource_path_builder
-from core_api.resource.validation import resource_validation
+from core_api.etcd.path import resource_path_builder
+from core_api.etcd.resource import resource_validation
 from settings import config
 
 router = APIRouter(prefix='/resource')
@@ -79,6 +79,7 @@ def get_resources(resource: str, name: Optional[str] = None):
 
     """
 
+    resource_path_builder(resource)
 
 
     if prefix:

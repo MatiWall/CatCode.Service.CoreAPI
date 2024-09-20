@@ -1,4 +1,7 @@
 from typing import Optional
+import re
+
+from core_api.etcd.retrieve import fetch_resource_definition
 
 
 def resource_path_creator(resource: dict):
@@ -18,6 +21,7 @@ def resource_path_creator(resource: dict):
 
 def resource_path_builder(
 
-        api_group: Optional[str] = None
+        resource: str
 ):
-    pass
+    if bool(re.match("^[^./]+$", resource)):
+        resource_definition = fetch_resource_definition(resource)
