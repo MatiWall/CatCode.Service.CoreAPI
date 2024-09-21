@@ -89,7 +89,7 @@ def mock_resources():
 @pytest.mark.order(1)
 def test_custom_resource_insert(mock_resource_definition):
     # Insert the resource
-    resp = client.post('/resource', json=mock_resource_definition)
+    resp = client.post('/resource/v1', json=mock_resource_definition)
 
     # Check if the POST request was successful
     assert resp.status_code == 200, f"Failed to insert resource: {resp.content}"
@@ -99,7 +99,7 @@ def test_custom_resource_insert(mock_resource_definition):
     assert retrieved == mock_resource_definition, "Inserted resource does not match"
 
     # Retrieve the inserted resource
-    resp = client.get('/resource/resourcedefinition/system')
+    resp = client.get('/resource/v1/resourcedefinition/system')
 
     # Check if the GET request was successful
     assert resp.status_code == 200, f"Failed to retrieve resource: {resp.content}"
@@ -110,11 +110,11 @@ def test_custom_resource_insert(mock_resource_definition):
 
 @pytest.mark.order(2)
 def test_resource_insert(mock_resources):
-    resp = client.post('/resource', json=mock_resources)
+    resp = client.post('/resource/v1', json=mock_resources)
 
     assert resp.status_code == 200, f"Failed to post resource {mock_resources} with error {resp.content}"
 
-    resp = client.get('/resource/system/test')
+    resp = client.get('/resource/v1/system/test')
 
     assert resp.status_code == 200, f"Failed to get resource {mock_resources} with error {resp.content}"
     retrieved = resp.json()['value']
@@ -125,11 +125,11 @@ def test_resource_put(mock_resources):
 
     mock_resources['spec'] = {'updated': 'resource'}
 
-    resp = client.put('/resource', json=mock_resources)
+    resp = client.put('/resource/v1', json=mock_resources)
 
     assert resp.status_code == 200, f"Failed to put resource {mock_resources} with error {resp.content}"
 
-    resp = client.get('/resource/system/test')
+    resp = client.get('/resource/v1/system/test')
 
     assert resp.status_code == 200, f"Failed to get resource {mock_resources} with error {resp.content}"
     retrieved = resp.json()['value']
@@ -137,7 +137,7 @@ def test_resource_put(mock_resources):
 
 @pytest.mark.order(4)
 def test_resource_delete():
-    path = '/resource/system/test'
+    path = '/resource/v1/system/test'
     resp = client.delete(path)
 
     assert resp.status_code == 200, f"Failed to delete resource {path} with error {resp.content}"

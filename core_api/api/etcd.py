@@ -9,7 +9,7 @@ from core_api.etcd.command import run_command
 from core_api.etcd.keys import key_builder
 from settings import config
 
-router = APIRouter(prefix='/resource')
+router = APIRouter(prefix='/resource/v1')
 
 @router.post("/")
 def post_resource(resource: dict):
@@ -17,6 +17,7 @@ def post_resource(resource: dict):
     path = key_builder.from_resource(resource)
     if 'api.catcode.io' in resource['apiVersion']:
         resource_definition_cache.add_resource(resource)
+
 
     command = ['etcdctl', f'--endpoints={config.etcd_host}', 'put', path, json.dumps(resource)]
     run_command(command)
