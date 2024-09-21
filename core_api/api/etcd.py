@@ -79,3 +79,14 @@ def delete_resources(type: str, name: str = ''):
         raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error deleting resource: {str(e)}")
+
+@router.put('/')
+def put_resource(resource: dict):
+    path = key_builder.from_resource(resource)
+
+    command = ['etcdctl', f'--endpoints={config.etcd_host}', 'put', path, json.dumps(resource)]
+    try:
+        output = run_command(command)
+        return {"key": path, "status": "created_or_updated"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error updating resource: {str(e)}")

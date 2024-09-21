@@ -106,7 +106,7 @@ def test_custom_resource_insert(mock_resource_definition):
 
     # Verify the retrieved resource matches the mock resource definition
     retrieved = resp.json()['value']
-    assert dict_formatter(retrieved) == dict_formatter(mock_resource_definition), "Retrieved resource does not match"
+    assert retrieved == mock_resource_definition, "Retrieved resource does not match"
 
 @pytest.mark.order(2)
 def test_resource_insert(mock_resources):
@@ -121,6 +121,21 @@ def test_resource_insert(mock_resources):
     assert retrieved == mock_resources
 
 @pytest.mark.order(3)
+def test_resource_put(mock_resources):
+
+    mock_resources['spec'] = {'updated': 'resource'}
+
+    resp = client.put('/resource', json=mock_resources)
+
+    assert resp.status_code == 200, f"Failed to put resource {mock_resources} with error {resp.content}"
+
+    resp = client.get('/resource/system/test')
+
+    assert resp.status_code == 200, f"Failed to get resource {mock_resources} with error {resp.content}"
+    retrieved = resp.json()['value']
+    assert retrieved == mock_resources
+
+@pytest.mark.order(4)
 def test_resource_delete():
     path = '/resource/system/test'
     resp = client.delete(path)
