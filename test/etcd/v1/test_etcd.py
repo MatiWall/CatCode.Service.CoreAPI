@@ -11,14 +11,16 @@ from main import app
 
 client = TestClient(app)
 
+
 def dict_formatter(obj1):
     return json.dumps(obj1, sort_keys=True)
+
 
 @pytest.fixture(scope="session", autouse=True)
 def docker_compose():
     """Start and stop Docker Compose before and after tests."""
     # Start Docker Compose
-    subprocess.run(["docker", "compose", "-f", BASE_DIR/'docker-compose.yaml', "up", "-d"], check=True)
+    subprocess.run(["docker", "compose", "-f", BASE_DIR / 'docker-compose.yaml', "up", "-d"], check=True)
     os.environ['ETCDCTL_API'] = '3'
     # Wait for services to initialize (optional, adjust as needed)
     time.sleep(2)
@@ -26,29 +28,29 @@ def docker_compose():
     yield  # Run the tests
 
     # Stop Docker Compose
-    subprocess.run(["docker", "compose", "-f",  BASE_DIR/'docker-compose.yaml', "down"], check=True)
+    subprocess.run(["docker", "compose", "-f", BASE_DIR / 'docker-compose.yaml', "down"], check=True)
+
 
 @pytest.fixture
 def mock_resource_definition():
-
     obj = {
-    "apiVersion": "api.catcode.io/v1alpha1",
-    "kind": "ResourceDefinition",
-    "metadata": {
-        "name": "SystemResourceDefinition"
-    },
-    "spec": {
-        "group": "catcode.io",
-        "names": {
-            "plural": "systems",
-            "singular": "system",
-            "kind": "System"
+        "apiVersion": "api.catcode.io/v1alpha1",
+        "kind": "ResourceDefinition",
+        "metadata": {
+            "name": "SystemResourceDefinition"
         },
-        "versions": [
-            {
-                "name": "v1alpha1",
-                "schema": {
-                    "openAPISchemaV3": {
+        "spec": {
+            "group": "catcode.io",
+            "names": {
+                "plural": "systems",
+                "singular": "system",
+                "kind": "System"
+            },
+            "versions": [
+                {
+                    "name": "v1alpha1",
+                    "schemaVersions": "openAPISchemaV3",
+                    "schema": {
                         "type": "object",
                         "properties": {
                             "spec": {
@@ -68,23 +70,22 @@ def mock_resource_definition():
                         ]
                     }
                 }
-            }
-        ]
+            ]
+        }
     }
-}
     return obj
 
 
 @pytest.fixture
 def mock_resources():
-
-    obj =  {
+    obj = {
         'apiVersion': 'catcode.io/v1alpha1',
         'kind': 'System',
         'metadata': {'name': 'test'},
         'spec': {'test': 'test'}
     }
     return obj
+
 
 @pytest.mark.order(1)
 def test_custom_resource_insert(mock_resource_definition):
@@ -108,6 +109,7 @@ def test_custom_resource_insert(mock_resource_definition):
     retrieved = resp.json()['value']
     assert retrieved == mock_resource_definition, "Retrieved resource does not match"
 
+
 @pytest.mark.order(2)
 def test_resource_insert(mock_resources):
     resp = client.post('/resource/v1', json=mock_resources)
@@ -120,9 +122,9 @@ def test_resource_insert(mock_resources):
     retrieved = resp.json()['value']
     assert retrieved == mock_resources
 
+
 @pytest.mark.order(3)
 def test_resource_put(mock_resources):
-
     mock_resources['spec'] = {'updated': 'resource'}
 
     resp = client.put('/resource/v1', json=mock_resources)
@@ -134,6 +136,7 @@ def test_resource_put(mock_resources):
     assert resp.status_code == 200, f"Failed to get resource {mock_resources} with error {resp.content}"
     retrieved = resp.json()['value']
     assert retrieved == mock_resources
+
 
 @pytest.mark.order(4)
 def test_resource_delete():

@@ -1,4 +1,7 @@
-from core_api.etcd.cache import ResourceDefinitionCache
+from fastapi import HTTPException
+import jsonschema
+
+from core_api.etcd.cache import ResourceDefinitionCache, resource_definition_cache
 
 
 class ResourceValidator:
@@ -8,5 +11,36 @@ class ResourceValidator:
     ):
         self.resource_definition_cache = resource_definition_cache
 
-    def validate(self):
-        pass
+    def __call__(self, resource: dict):
+        return self.validate(resource)
+
+    def validate(self, resource: dict):
+        resource_definition = self.resource_definition_cache.get_resource_definition(resource)
+
+        _, version = resource['apiVersion'].split('/')
+
+        schema_spec = [s for s in resource_definition['spec']['versions'] if s['name'] == version]
+
+        if len(schema_spec) == 0:
+            raise HTTPException(status_code=400, detail=f'No resource schema found for resource: {resource}')
+        elif len(schema_spec) > 1:
+            raise HTTPException(status_code=400, detail=f'Multiple schemas found for resource: {resource}')
+
+        schema_spec = schema_spec[0]
+
+        # Validate the schema version
+        if 'schemaVersion' not in schema_spec or schema_spec['schemaVersion'] != 'openAPISchemaV3':
+            raise HTTPException(status_code=400, detail=f'Invalid schema version: {schema_spec.get("schemaVersion")}')
+
+        if schema_spec['schemaVersion'] != 'openAPISchemaV3':
+            raise HTTPException(status_code=400, detail=f'Invalid schema {schema_spec["schemaVersion"]}')
+
+        schema = schema_spec['schema']
+        # TODO: Implemnt base validation also.
+        jsonschema.validate(resource['spec'], schema)
+
+        return resource
+
+
+resource_validator = ResourceValidator(resource_definition_cache)
+
