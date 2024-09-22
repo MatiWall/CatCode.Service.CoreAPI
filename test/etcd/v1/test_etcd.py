@@ -49,24 +49,16 @@ def mock_resource_definition():
             "versions": [
                 {
                     "name": "v1alpha1",
-                    "schemaVersions": "openAPISchemaV3",
+                    "schemaVersion": "openAPISchemaV3",
                     "schema": {
                         "type": "object",
                         "properties": {
-                            "spec": {
-                                "type": "object",
-                                "properties": {
-                                    "owner": {
-                                        "type": "string"
-                                    }
-                                },
-                                "required": [
-                                    "owner"
-                                ]
+                            "owner": {
+                                "type": "string"
                             }
                         },
                         "required": [
-                            "spec"
+                            "owner"
                         ]
                     }
                 }
@@ -82,7 +74,7 @@ def mock_resources():
         'apiVersion': 'catcode.io/v1alpha1',
         'kind': 'System',
         'metadata': {'name': 'test'},
-        'spec': {'test': 'test'}
+        'spec': {'owner': 'test'}
     }
     return obj
 
