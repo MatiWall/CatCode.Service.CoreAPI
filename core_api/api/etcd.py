@@ -20,7 +20,7 @@ def post_resource(resource: dict):
 
     path = key_builder.from_resource(resource)
     if 'api.catcode.io' in resource['apiVersion']:
-        resource_validator .base_resource_validation(resource)
+        resource_validator.base_resource_validation(resource)
         resource_definition_cache.add_resource(resource)
     else:
         resource = resource_validator(resource)
@@ -89,6 +89,14 @@ def delete_resources(type: str, name: str = ''):
 
 @router.put('/')
 def put_resource(resource: dict):
+    resource_validator.base_validation(resource)
+
+    if 'api.catcode.io' in resource['apiVersion']:
+        resource_validator.base_resource_validation(resource)
+        resource_definition_cache.add_resource(resource)
+    else:
+        resource = resource_validator(resource)
+
     path = key_builder.from_resource(resource)
 
     command = ['etcdctl', f'--endpoints={config.etcd_host}', 'put', path, json.dumps(resource)]
