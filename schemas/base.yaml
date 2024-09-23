@@ -1,0 +1,45 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: Base Entity
+description: All kinds should be on this format
+apiVersion: catcode.io/v1
+kind: BaseSchema
+type: object
+properties:
+  apiVersion:
+    type: string
+    pattern: "^[a-z0-9]+(?:\\.[a-z0-9]+)*/v[0-9]+(alpha|beta)?[0-9]*$"
+  kind:
+    type: string
+    pattern: "^[A-Z][a-z0-9]+(?:[A-Z][a-z0-9]+)*$"
+  metadata:
+    type: object
+    additionalProperties: false
+    properties:
+      name:
+        type: string
+        description: The name of the object. Must be a DNS subdomain-compliant string.
+      labels:
+        type: object
+        description: Key-Value paris used to organise and select subsets of objects.
+        additionalProperties:
+          type: string
+      annotations:
+        type: object
+        description: Arbitarary metadata for external tools or additional information.
+        additionalProperties:
+          type: string
+      uid:
+        type: string
+        description: A uuid that uniquely identifies the resource
+      creationTimestamp:
+        type: string
+        format: date-time
+        description: Timestamp representing when the object was created
+      updatedTimestamp:
+        type: string
+        format: date-time
+        description: Timestamp representing when the object was created
+    required: [name]
+  spec:
+    type": object
+required: [apiVersion, kind, metadata, spec]

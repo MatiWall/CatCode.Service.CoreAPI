@@ -1,0 +1,36 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: ResourceDefinition
+description: A schema for validating a Kubernetes ResourceDefinition object.
+apiVersion: catcode.io/v1
+kind: BaseResourceDefinition
+type: object
+properties:
+  spec:
+    type: object
+    properties:
+      group:
+        type: string
+      names:
+        type: object
+        properties:
+          plural:
+            type: string
+          singular:
+            type: string
+          kind:
+            type: string
+        required: [plural, singular, kind]
+      versions:
+        type: array
+        items:
+          type: object
+          properties:
+            name:
+              type: string
+            schemaVersion:
+              type: string
+            schema:
+              type: object
+          required: [name, schemaVersion, schema]
+    required: [group, names, versions]
+required: [spec]

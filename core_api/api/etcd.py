@@ -1,22 +1,26 @@
 import json
 from typing import Optional
 
-from fastapi import APIRouter
+import yaml
+from fastapi import APIRouter, FastAPI, Depends, Request
 from fastapi.exceptions import HTTPException
 
 from core_api.etcd.cache import resource_definition_cache
 from core_api.etcd.command import run_command
 from core_api.etcd.keys import key_builder
 from core_api.etcd.validate import resource_validator
-from settings import config
+from settings import config, BASE_DIR
 
 router = APIRouter(prefix='/resource/v1')
 
 @router.post("/")
 def post_resource(resource: dict):
 
+    resource_validator.base_validation(resource)
+
     path = key_builder.from_resource(resource)
     if 'api.catcode.io' in resource['apiVersion']:
+        resource_validator .base_resource_validation(resource)
         resource_definition_cache.add_resource(resource)
     else:
         resource = resource_validator(resource)

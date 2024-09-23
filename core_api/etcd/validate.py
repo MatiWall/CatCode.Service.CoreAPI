@@ -1,7 +1,9 @@
+import yaml
 from fastapi import HTTPException
 import jsonschema
 
 from core_api.etcd.cache import ResourceDefinitionCache, resource_definition_cache
+from settings import BASE_DIR
 
 
 class ResourceValidator:
@@ -10,6 +12,14 @@ class ResourceValidator:
             resource_definition_cache: ResourceDefinitionCache,
     ):
         self.resource_definition_cache = resource_definition_cache
+
+        base_schemas = {}
+        for name, schema in [('base-schema', 'schemas/base.yaml'),
+                             ('base-resource-definition-schema', 'schemas/base-resource-definition.yaml')]:
+            with (BASE_DIR / schema).open('r') as f:
+                file = yaml.safe_load(f)
+                base_schemas[name] = file
+        self.base_schemas = base_schemas
 
     def __call__(self, resource: dict):
         return self.validate(resource)
@@ -41,6 +51,13 @@ class ResourceValidator:
 
         return resource
 
+    def base_validation(self, resource: dict):
+        jsonschema.validate(resource, self.base_schemas['base-schema'])
+        return resource
+
+    def base_resource_validation(self, resource: dict):
+        jsonschema.validate(resource, self.base_schemas['base-resource-definition-schema'])
+        return resource
 
 resource_validator = ResourceValidator(resource_definition_cache)
 
