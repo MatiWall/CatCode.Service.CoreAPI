@@ -48,6 +48,19 @@ class ResourceDefinitionCache:
         group, _ = resource['apiVersion'].split('/')
         return self._resources[f'{group}/{self.get_singular_name(resource)}']
 
+    def is_singular(self, name: str):
+        if name in self._singular_name.keys():
+            return True
+        return False
+
+    def is_plural(self, name: str):
+        if name in self._plural_name.keys():
+            return True
+        return False
+
+    def exists(self, name: str):
+        return self.is_singular(name) or self.is_plural(name)
+
 
 
 resource_definition_cache = ResourceDefinitionCache()

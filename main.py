@@ -21,7 +21,6 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 import uvicorn
 
-from core_api.api.appplications import router as application_router
 from core_api.api.statistics import router as stat_router
 from core_api.api.etcd import router as etcd_router
 

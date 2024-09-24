@@ -50,13 +50,16 @@ class KeyBuilder:
             If version is not added it should use the newest.s:
 
         """
+
         if 'resourcedefinition' == type:
             names = self.resource_definition_cache._singular_name[name]
             path = f'/api.catcode.io/resourcedefinition/{names["group"]}/{names["singular"]}'
-        else:
+        elif name:
             names = self.resource_definition_cache._singular_name[type]
             path = f"/{names['group']}/{type}/{name}"
-
+        else:
+            names = self.resource_definition_cache._plural_name[type]
+            path = f"/{names['group']}/{names['singular']}"
         return self.prefix + path
 
 key_builder = KeyBuilder(resource_definition_cache)
