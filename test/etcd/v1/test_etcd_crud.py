@@ -16,7 +16,7 @@ def dict_formatter(obj1):
     return json.dumps(obj1, sort_keys=True)
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="module", autouse=True)
 def docker_compose():
     """Start and stop Docker Compose before and after tests."""
     # Start Docker Compose
