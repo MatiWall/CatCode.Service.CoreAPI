@@ -11,8 +11,6 @@ logger = logging.getLogger(__name__)
 
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from core_api.core.startup import on_start_up
-
 from core_api import scheduler
 
 from fastapi import FastAPI, Request, status

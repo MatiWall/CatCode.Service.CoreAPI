@@ -28,6 +28,7 @@ apscheduler = "^3.10.4"
 extensions-rabbitmq = "^0.1.0"
 extensions-configuration = "0.2.0"
 extensions-opentelemetry = "0.2.0"
+jsonschema = "^4.23.0"
 
 
 [tool.poetry.group.dev.dependencies]

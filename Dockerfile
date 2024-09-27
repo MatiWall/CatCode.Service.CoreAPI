@@ -1,5 +1,10 @@
-FROM docker-registry.mw.local/python:3.12-3
+FROM python:3.12-slim
 
+ENV POETRY_HOME=/app
+ENV POETRY_VIRTUALENVS_IN_PROJECT=true
+ENV POETRY_NO_INTERACTION=true
+
+RUN pip install poetry
 WORKDIR /app
 
 COPY pyproject.toml poetry.lock /app/

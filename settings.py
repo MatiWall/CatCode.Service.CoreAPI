@@ -14,7 +14,7 @@ class Config:
    rabbitmq_url: str
    logging_level: str
    etcd_host: str
-   github_token: str
+   github_token: str = ''
 
 config = read_configs_to_dataclass(Config, BASE_DIR)
 
