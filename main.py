@@ -1,17 +1,16 @@
 import asyncio
+import json
 import logging
 from contextlib import asynccontextmanager
 
 import yaml
 
-from core_api.etcd.cache import resource_definition_cache
-from settings import BASE_DIR
+from core_api.etcd import run_command
+from core_api.etcd.keys import key_builder
+from settings import BASE_DIR, config
 
 logger = logging.getLogger(__name__)
 
-from starlette.middleware.base import BaseHTTPMiddleware
-
-from core_api import scheduler
 
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -19,22 +18,16 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 import uvicorn
 
-from core_api.api.statistics import router as stat_router
 from core_api.api.etcd import router as etcd_router
 
 @asynccontextmanager
 async def initialize_resource_definition_cache(app: FastAPI):
 
-
-    # resource_definitions = fetch_resource_definitions(f'registry/api.catcode.io/resourcedefinition')
-    #
-    # for resource_definition in resource_definitions:
-    #     resource_definition_cache.add(resource_definition)
-
     yield
 
 app = FastAPI(
-    root_path='/api/core-api/v1',
+    root_path='/api/core-api',
+    # openapi_url="/api/core-api/openapi.json",
     lifespan=initialize_resource_definition_cache
 )
 
@@ -56,6 +49,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/health/live")
+async def liveness_check():
+    return JSONResponse(content={"status": "alive"}, status_code=200)
 
 # @app.on_event("startup")
 # async def startup_event():
@@ -74,4 +70,5 @@ if __name__ == '__main__':
     logging.getLogger("httpx").setLevel(logging.ERROR)
 
     logger.info('CatCode core core_api starting up')
+    logger.info(f'Connecting to etcd running on {config.etcd_host}')
     uvicorn.run('main:app', host='0.0.0.0')

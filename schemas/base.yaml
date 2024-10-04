@@ -23,11 +23,13 @@ properties:
         description: Key-Value paris used to organise and select subsets of objects.
         additionalProperties:
           type: string
+        default: {}
       annotations:
         type: object
         description: Arbitarary metadata for external tools or additional information.
         additionalProperties:
           type: string
+        default: {}
       uid:
         type: string
         description: A uuid that uniquely identifies the resource

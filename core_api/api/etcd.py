@@ -1,3 +1,8 @@
+import logging
+
+from core_api.resource.initializer import set_metadata_fields
+
+logger = logging.getLogger(__name__)
 import json
 from typing import Optional
 
@@ -13,10 +18,16 @@ from settings import config, BASE_DIR
 
 router = APIRouter(prefix='/resource/v1')
 
+
+
 @router.post("/")
 def post_resource(resource: dict):
 
     resource_validator.base_validation(resource)
+
+    resource = set_metadata_fields(resource)
+
+    resource_validator.base_validation(resource)# just to be safe
 
     path = key_builder.from_resource(resource)
     if 'api.catcode.io' in resource['apiVersion']:
@@ -25,13 +36,23 @@ def post_resource(resource: dict):
     else:
         resource = resource_validator(resource)
 
-    command = ['etcdctl', f'--endpoints={config.etcd_host}', 'put', path, json.dumps(resource)]
+    command = ['put', path, json.dumps(resource)]
     run_command(command)
-    return {"key": path, "resource": resource}
+
+    command = ['get', path, '--print-value-only']
+
+    output = run_command(command)
+
+    if output:
+        res = json.loads(output.strip())
+        logger.debug(f'Successfully postet to key {path} with value resource {res}')
+        return {"key": path, "resource": res, 'exists': True}
+
+    raise HTTPException(status_code=400, detail=f"Failed to insert resource {path} does not exists")
 
 
 @router.get('/{type}')
-def get_resources(type: str):
+def get_resources(type: str = ''):
     """
     Should be able to handle resource on the following formats:
 
@@ -51,7 +72,7 @@ def get_resources(type: str):
     """
     # Check if the resource type exists and is plural
     if not resource_definition_cache.exists(type):
-        raise HTTPException(status_code=404, detail=f"Resource {type} does not exist.")
+        raise HTTPException(status_code=404, detail=f"Resource {type} does not exist. Choose between {resource_definition_cache.plural_names()}")
 
     if not resource_definition_cache.is_plural(type):
         raise HTTPException(status_code=400, detail=f"Please use plural names when requesting multiple resources.")
@@ -59,8 +80,10 @@ def get_resources(type: str):
     # Build the key prefix path for etcd
     path_prefix = key_builder.from_request(type)
 
+    logger.debug(f'Fetching resources with path {path_prefix}')
+
     # Use etcdctl to get all resources with the matching prefix
-    command = ['etcdctl', f'--endpoints={config.etcd_host}', 'get', path_prefix, '--prefix', '--print-value-only']
+    command = ['get', path_prefix, '--prefix', '--print-value-only']
 
     try:
         output = run_command(command)
@@ -112,7 +135,7 @@ def get_resource(type: str, name: str = ''):
     path = key_builder.from_request(type, name)
 
 
-    command = ['etcdctl', f'--endpoints={config.etcd_host}', 'get', path, '--print-value-only']
+    command = ['get', path, '--print-value-only']
 
     try:
         output = run_command(command)
@@ -131,7 +154,7 @@ def delete_resources(type: str, name: str = ''):
 
     path = key_builder.from_request(type, name)
 
-    command = ['etcdctl', f'--endpoints={config.etcd_host}', 'del', path]
+    command = ['del', path]
     try:
         output = run_command(command)
         if "1" in output.lower():
@@ -155,7 +178,7 @@ def put_resource(resource: dict):
 
     path = key_builder.from_resource(resource)
 
-    command = ['etcdctl', f'--endpoints={config.etcd_host}', 'put', path, json.dumps(resource)]
+    command = ['put', path, json.dumps(resource)]
     try:
         output = run_command(command)
         return {"key": path, "status": "created_or_updated"}
@@ -169,7 +192,7 @@ def patch_resources(item: dict, type: str, name: str):
     path = key_builder.from_request(type, name)
 
     # Command to get the current resource from etcd
-    get_command = ['etcdctl', f'--endpoints={config.etcd_host}', 'get', path, '--print-value-only']
+    get_command = ['get', path, '--print-value-only']
 
     try:
         # Retrieve the existing resource from etcd
@@ -201,7 +224,7 @@ def patch_resources(item: dict, type: str, name: str):
         updated_data = json.dumps(updated_data)
 
         # Command to put the updated resource back into etcd
-        put_command = ['etcdctl', f'--endpoints={config.etcd_host}', 'put', path, updated_data]
+        put_command = ['put', path, updated_data]
 
         # Run the command to update the resource in etcd
         run_command(put_command)

@@ -1,3 +1,5 @@
+import logging
+logger = logging.getLogger(__name__)
 from dataclasses import dataclass
 from pathlib import Path
 from extensions.configuration import read_configs_to_dataclass, hosting_environment
@@ -17,6 +19,8 @@ class Config:
    github_token: str = ''
 
 config = read_configs_to_dataclass(Config, BASE_DIR)
+
+logger.info(f'Running using configs {config}')
 
 configure_opentelemetry(
    enable_otel=hosting_environment.is_production(),

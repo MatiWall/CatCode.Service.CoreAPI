@@ -47,12 +47,15 @@ class ResourceValidator:
 
         schema = schema_spec['schema']
         # TODO: Implemnt base validation also.
-        jsonschema.validate(resource['spec'], schema)
+        jsonschema.validate({'spec': resource['spec']}, schema)
 
         return resource
 
     def base_validation(self, resource: dict):
-        jsonschema.validate(resource, self.base_schemas['base-schema'])
+        try:
+            jsonschema.validate(resource, self.base_schemas['base-schema'])
+        except jsonschema.ValidationError as e:
+            raise HTTPException(status_code=400, detail=f"Validation Error: {e.message}")
         return resource
 
     def base_resource_validation(self, resource: dict):

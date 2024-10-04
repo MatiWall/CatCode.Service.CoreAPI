@@ -43,7 +43,7 @@ class ResourceDefinitionCache:
         for singular_name, values in self._singular_name.items():
             if resource['kind'] in values.values():
                 return singular_name
-            return None
+        return None
     def get_resource_definition(self, resource: dict):
         group, _ = resource['apiVersion'].split('/')
         return self._resources[f'{group}/{self.get_singular_name(resource)}']
@@ -60,6 +60,9 @@ class ResourceDefinitionCache:
 
     def exists(self, name: str):
         return self.is_singular(name) or self.is_plural(name)
+
+    def plural_names(self):
+        return list(self._plural_name.keys())
 
 
 
